@@ -49,6 +49,12 @@ struct PatternSet64 {
 		pattern = std::bitset<64>{randomInt64};
 	}	
 
+	// should be copy or readonly?
+	std::bitset<64> getPattern() {
+		return pattern;
+	}
+
+	// readonly
 	void printPattern() {
 		printf("Pattern\n");		
 		for (int i=0; i<8; i++) {
@@ -61,27 +67,51 @@ struct PatternSet64 {
 		printf("\n");
 	}
 
+	// readonly
+	int compare(std::bitset<64> other) {
+		auto result = std::bitset<64>{};
+		// set result to pattern
+		result |= pattern;
+
+		// return count of common bits
+		result &= other;
+		return result.count();
+	}
+
+
 private:
 	std::bitset<64> pattern;
 };
 
 int main() {
-	auto starterBitset = std::bitset<64>{};
-	starterBitset.set();
-
+	// quick test generation methods
 	auto myPattern = PatternSet64{};
-	myPattern.printPattern();
 	myPattern.setAll();
 	myPattern.printPattern();
+
 	myPattern.unsetAll();
 	myPattern.set(0);
 	myPattern.set(5);
 	myPattern.set(63);
 	myPattern.set(65);
 	myPattern.printPattern();
+
 	myPattern.invert();
 	myPattern.printPattern();
+
 	myPattern.setToRandom();
 	myPattern.printPattern();
+
+	// test set comparison
+	auto starterBitset = PatternSet64{};
+	starterBitset.set(0);
+	starterBitset.printPattern();
+
+	myPattern.setAll();
+	int result1= starterBitset.compare(myPattern.getPattern());
+	printf("Result: %d\n", result1);
+	starterBitset.invert();
+	int result2 = starterBitset.compare(myPattern.getPattern());
+	printf("Result: %d\n", result2);
 }
 
