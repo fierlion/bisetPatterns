@@ -3,9 +3,17 @@
 #include <random>
 #include <stdint.h>
 
+enum Direction {
+	RIGHT,
+	LEFT,
+	UP,
+	DOWN
+};
+
 struct PatternSet64 {
 	PatternSet64() {
 		pattern = std::bitset<64>{};
+		maxSide = 8;
 	}
 
 	bool setAll() {
@@ -78,40 +86,88 @@ struct PatternSet64 {
 		return result.count();
 	}
 
+	// NOTE destructive operation
+	// NOTE Work in progress
+	// this ultimately needs to copy to a larger bit array
+	// to deal with clipping
+	// and should also do better bounds checking
+	bool shift(Direction direction, int count) {
+		if (count > maxSide) {
+			// for now we'll truncate
+			count = maxSide;
+		}
+		// TODO result will contain more info about the operation
+		bool result = false;
+		switch (direction) {
+			case RIGHT:
+				pattern <<= count;
+				result = true;
+				break;
+			case LEFT :
+				pattern >>= count;
+				result = true;
+				break;
+			case UP   :
+				pattern >>= (count * maxSide);
+				result = true;
+				break;
+			case DOWN :
+				pattern <<= (count * maxSide);
+				result = true;
+				break;
+		        default   :
+				result = false;
+				break;
+		}
+		return result;
+	}
+
 
 private:
 	std::bitset<64> pattern;
+	int maxSide;
 };
 
 int main() {
 	// quick test generation methods
 	auto myPattern = PatternSet64{};
 	myPattern.setAll();
-	myPattern.printPattern();
+	//myPattern.printPattern();
 
 	myPattern.unsetAll();
-	myPattern.set(0);
-	myPattern.set(5);
-	myPattern.set(63);
-	myPattern.set(65);
+	myPattern.set(3);
+	myPattern.set(10);
+	myPattern.set(12);
+	myPattern.set(19);
 	myPattern.printPattern();
+
+	myPattern.shift(Direction::RIGHT, 2);
+	myPattern.printPattern();
+	myPattern.shift(Direction::LEFT, 4);
+	myPattern.printPattern();
+
+	myPattern.shift(Direction::DOWN, 4);
+	myPattern.printPattern();
+	myPattern.shift(Direction::UP, 4);
+	myPattern.printPattern();
+
 
 	myPattern.invert();
-	myPattern.printPattern();
+	//myPattern.printPattern();
 
 	myPattern.setToRandom();
-	myPattern.printPattern();
+	//myPattern.printPattern();
 
 	// test set comparison
 	auto starterBitset = PatternSet64{};
 	starterBitset.set(0);
-	starterBitset.printPattern();
+	//starterBitset.printPattern();
 
 	myPattern.setAll();
 	int result1= starterBitset.compare(myPattern.getPattern());
-	printf("Result: %d\n", result1);
+	//printf("Result: %d\n", result1);
 	starterBitset.invert();
 	int result2 = starterBitset.compare(myPattern.getPattern());
-	printf("Result: %d\n", result2);
+	//printf("Result: %d\n", result2);
 }
 
